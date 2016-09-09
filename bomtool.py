@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 # Bom tool
 #
 # Copyright (c) 2016 Jose I Romero
@@ -131,7 +132,7 @@ def bom_from_comps(comps):
     for c in comps:
         if c.get('BOM', '') == '':
             logging.error("Component '{}' has no BOM line!".format(c['ref']))
-            grouped['!!MISSING!!'].append(c)
+            grouped['!!MISSING!! '+c['value']].append(c)
         elif c['BOM'] == 'VIRTUAL':
             logging.warning("Component '{}' is VIRTUAL, will be excluded from the BOM."
                          .format(c['ref']))
@@ -153,7 +154,7 @@ if __name__ == "__main__":
     comps = comps_from_netlist(data)
     bom = bom_from_comps(comps)
     bom_writer= DictWriter(stdout,
-                           fieldnames = ['qty', 'description', 'refs', 'manufacturer', 'MPN'],
+                           fieldnames = ['qty', 'description', 'refs', 'package', 'manufacturer', 'MPN'],
                            extrasaction='ignore')
     bom_writer.writeheader()
     for b in bom:
