@@ -18,7 +18,18 @@ output, after grouping, counting and filling every BOM like the best
 it can from the available data. To call it you first need to export a
 netlist from eeschema and then call the script like this:
 
-    $ ./bomtool.py myproject.net > myproject-bom.csv
+    $ python3 -m bomtool myproject.net > myproject-bom.csv
+
+# Installation
+
+To install bomtool you can do it in a virtualenv
+
+    $ mkvirtualenv bomtool
+    $ workon bomtool
+    (bomtool)$ pip install --editable .
+    
+After that you can run the code from anywhere with the "bomtool"
+command.
 
 # BOM format
 

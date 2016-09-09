@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 # Bom tool
 #
 # Copyright (c) 2016 Jose I Romero
@@ -22,9 +21,14 @@
 # OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
 # WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
+from __future__ import print_function
+from __future__ import unicode_literals
+from __future__ import division
+from __future__ import absolute_import
 
-import sexp
-from sexp import car, cdr, cadr, findall, assoc
+from . import sexp
+from .sexp import car, cdr, cadr, findall, assoc
+
 import logging
 from collections import defaultdict
 
@@ -146,16 +150,3 @@ def bom_from_comps(comps):
             bomline['refs'] = ", ".join([c['ref'] for c in grouped[l]])
             bom.append(bomline)
     return bom
-
-if __name__ == "__main__":
-    from sys import argv, stdout
-    from csv import DictWriter
-    data = car(sexp.load(open(argv[1])))
-    comps = comps_from_netlist(data)
-    bom = bom_from_comps(comps)
-    bom_writer= DictWriter(stdout,
-                           fieldnames = ['qty', 'description', 'refs', 'package', 'manufacturer', 'MPN'],
-                           extrasaction='ignore')
-    bom_writer.writeheader()
-    for b in bom:
-        bom_writer.writerow(b)
