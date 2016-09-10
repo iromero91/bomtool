@@ -26,7 +26,6 @@ from __future__ import unicode_literals
 from __future__ import division
 from __future__ import absolute_import
 
-from . import sexp
 from .sexp import car, cdr, cadr, findall, assoc
 
 import logging
@@ -88,10 +87,12 @@ def parse_comp(comp_data):
     for f in fields:
         res[cadr(assoc(f, 'name'))] = f[-1]
     return res
-        
+
+
 def comps_from_netlist(data):
     comps_data = findall(cdr(assoc(data, 'components')), 'comp')
     return [parse_comp(c) for c in comps_data]
+
 
 def parse_bomline(line):
     # If we have multiple bom lines, recurse
@@ -131,6 +132,7 @@ def parse_bomline(line):
 
     return [attrs]
 
+
 def bom_from_comps(comps):
     grouped = defaultdict(list)
     for c in comps:
@@ -138,8 +140,9 @@ def bom_from_comps(comps):
             logging.error("Component '{}' has no BOM line!".format(c['ref']))
             grouped['!!MISSING!! '+c['value']].append(c)
         elif c['BOM'] == 'VIRTUAL':
-            logging.warning("Component '{}' is VIRTUAL, will be excluded from the BOM."
-                         .format(c['ref']))
+            logging.warning(
+                "Component '{}' is VIRTUAL, will be excluded from the BOM."
+                .format(c['ref']))
         else:
             grouped[c['BOM']].append(c)
     bom = []

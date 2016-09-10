@@ -29,7 +29,10 @@ from __future__ import absolute_import
 from .bomtool import comps_from_netlist, bom_from_comps
 
 from . import sexp
-from .sexp import car, cdr, cadr, findall, assoc
+from .sexp import car
+
+_bom_fields = ['qty', 'description', 'refs', 'package', 'manufacturer', 'MPN']
+
 
 def main():
     from sys import argv, stdout
@@ -37,9 +40,8 @@ def main():
     data = car(sexp.load(open(argv[1])))
     comps = comps_from_netlist(data)
     bom = bom_from_comps(comps)
-    bom_writer= DictWriter(stdout,
-                           fieldnames = ['qty', 'description', 'refs', 'package', 'manufacturer', 'MPN'],
-                           extrasaction='ignore')
+    bom_writer = DictWriter(stdout, fieldnames=_bom_fields,
+                            extrasaction='ignore')
     bom_writer.writeheader()
     for b in bom:
         bom_writer.writerow(b)
