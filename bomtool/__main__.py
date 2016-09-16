@@ -31,7 +31,7 @@ from .bomtool import comps_from_netlist, bom_from_comps
 from . import sexp
 from .sexp import car
 
-_bom_fields = ['qty', 'description', 'refs', 'package', 'manufacturer', 'MPN']
+_bom_fields = ['qty','refs', 'description', 'package', 'manufacturer', 'MPN']
 
 
 def main():
