@@ -13,12 +13,12 @@ jumpers, net ties, mounting holes) should have their `BOM` field to
 "!!MISSING!!" tag in the description and the script will show a
 warning.
 
-Right now the script just outputs a fixed format CSV file to the
-output, after grouping, counting and filling every BOM like the best
-it can from the available data. To call it you first need to export a
-netlist from eeschema and then call the script like this:
+Right now the script just outputs a fixed format CSV file, after
+grouping, counting and filling every BOM line the best it can from the
+available data. To call it you first need to export a netlist from
+eeschema and then call the script like this:
 
-    $ python3 -m bomtool myproject.net > myproject-bom.csv
+    $ python3 -m bomtool myproject.net myproject-bom.csv
 
 # Installation
 

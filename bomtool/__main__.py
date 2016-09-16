@@ -40,7 +40,8 @@ def main():
     data = car(sexp.load(open(argv[1])))
     comps = comps_from_netlist(data)
     bom = bom_from_comps(comps)
-    bom_writer = DictWriter(stdout, fieldnames=_bom_fields,
+    of = open(argv[2], 'w')
+    bom_writer = DictWriter(of, fieldnames=_bom_fields,
                             extrasaction='ignore')
     bom_writer.writeheader()
     for b in bom:
