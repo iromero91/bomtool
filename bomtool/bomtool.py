@@ -28,6 +28,9 @@ from __future__ import absolute_import
 
 from .sexp import car, cdr, cadr, findall, assoc
 
+from . import pngen
+
+import re
 import logging
 from collections import defaultdict
 
@@ -78,6 +81,47 @@ _known_pkgs = {
     '5929': "Wide 2959 (7515 Metric), 5929",
 }
 
+dielectrics = ['NP0', 'C0G', 'X5R', 'X7R']
+
+class ComponentCache:
+    def get(self, key, default=None):
+        res = default
+        if key[:2] == ('RES', 'SMD'):
+            fields = list(key[2:])
+            value = parse_eng(fields.pop(0))
+            tolerance = 5
+            power = None
+            package = None
+            for f in fields:
+                if f[0] + f[-1] == "[]":
+                    package = f[1:-1]
+                elif f[-1] == '%':
+                    tolerance = float(f[:-1])
+                elif f[-1] in ['W', 'w']:
+                    power = parse_eng(f[:-1])
+            res = pngen.RC(value, tolerance, power, package)
+        if key[:2] == ('CAP', 'MLCC'):
+            fields = list(key[2:])
+            value = parse_eng(fields.pop(0))
+            tolerance = 10
+            dielectric = None
+            voltage = 16
+            package = None
+            for f in fields:
+                if f[0] + f[-1] == "[]":
+                    package = f[1:-1]
+                elif f[-1] == '%':
+                    tolerance = float(f[:-1])
+                elif f[-1] in ['V', 'v']:
+                    voltage = parse_eng(f[:-1])
+                elif f in dielectrics:
+                    dielectric = f
+            if dielectric == 'X7R':
+                res = pngen.CC_X7R(value, tolerance, voltage, package)
+        return res
+
+known_components = ComponentCache()
+
 
 def parse_comp(comp_data):
     res = {}
@@ -93,6 +137,34 @@ def comps_from_netlist(data):
     comps_data = findall(cdr(assoc(data, 'components')), 'comp')
     return [parse_comp(c) for c in comps_data]
 
+_re_eng = re.compile(
+    r'(?P<whole>\d*)'
+    r'(?P<sep>[.pnuµmkMGRRr])?'
+    r'(?P<decimals>\d*)'
+    r'(?P<suffix>[.pnuµmkMG])?'
+)
+
+_eng_suffixes = {
+    'p': 1e-12,
+    'n': 1e-9,
+    'u': 1e-6,
+    'µ': 1e-6,
+    'm': 1e-3,
+    'k': 1e3,
+    'M': 1e6,
+    'G': 1e9
+}
+
+def parse_eng(s):
+    value = None
+    match = _re_eng.match(s)
+    if match and (match.group('whole') or match.group('decimals')):
+        value = float(match.group('whole') + '.' + match.group('decimals'))
+        if match.group('sep') in _eng_suffixes:
+            value *= _eng_suffixes[match.group('sep')]
+        else:
+            value *= _eng_suffixes.get(match.group('suffix'), 1)
+    return value
 
 def parse_bomline(line):
     # If we have multiple bom lines, recurse
@@ -114,13 +186,17 @@ def parse_bomline(line):
             attrs['mult'] = int(multiplier, 10)
         except:
             pass
+    known_component = known_components.get(tuple(fields))
     # Extract package if it exists (last field)
     if fields[-1][0] + fields[-1][-1] == "[]":
         package = fields.pop(-1)[1:-1]
         attrs['package'] = _known_pkgs.get(package, package)
     # Extract the attributes depending on the kind of component
     kind = attrs['kind'] = fields[0]
-    if kind in ['RES', 'BEAD'] and cadr(fields) in ['SMD', 'AXIAL']:
+
+    if known_component:
+        attrs.update(known_component)
+    elif kind in ['RES', 'BEAD'] and cadr(fields) in ['SMD', 'AXIAL']:
         attrs['value'] = " ".join(fields[2:])
     elif kind == 'CAP' and cadr(fields) in ['MLCC', 'TANT']:
         attrs['value'] = " ".join(fields[2:])
