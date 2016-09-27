@@ -172,7 +172,7 @@ def parse_bomline(line):
         bomlines = []
         for l in line.split(';'):
             if l.strip():
-                bomlines += parse_bomline(l)
+                bomlines += parse_bomline(l.strip())
         return bomlines
     #
     # Otherwise parse a single bom line
