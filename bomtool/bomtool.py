@@ -225,7 +225,7 @@ def bom_from_comps(comps):
     for l in sorted(grouped.keys()):
         bomlines = parse_bomline(l)
         for bomline in bomlines:
-            bomline['qty'] = len(grouped[l])
+            bomline['qty'] = len(grouped[l]) * bomline.get('mult', 1)
             bomline['refs'] = ", ".join([c['ref'] for c in grouped[l]])
             bom.append(bomline)
     return bom
