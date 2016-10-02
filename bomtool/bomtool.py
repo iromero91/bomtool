@@ -182,7 +182,7 @@ def parse_bomline(line):
     attrs['description'] = line
     # Extract quantity if it exists (first field)
     if fields[0][0] + fields[0][-1] == "()":
-        multiplier = fields.pop(0)
+        multiplier = fields.pop(0)[1:-1]
         try:
             attrs['mult'] = int(multiplier, 10)
         except:
