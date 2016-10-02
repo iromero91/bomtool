@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 # Bom tool
 #
 # Copyright (c) 2016 Jose I Romero

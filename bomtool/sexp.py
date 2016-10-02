@@ -32,6 +32,12 @@ _atom_end = set('()"\'') | set(whitespace)
 _escapes = {'n': '\n', 'r': '\r', 't': '\t'}
 
 
+try:
+    _str_types = (str, unicode)
+except:
+    _str_types = (str,)
+
+
 def contains_any(lst, s):
     return True in [c in lst for c in s]
 
@@ -65,7 +71,7 @@ def loads(s):
                 pass
             else:
                 stack.append((c,))
-        elif reading == str:
+        elif reading in _str_types:
             if c == '"':
                 stack[-2].append(stack.pop())
                 if stack[-1][0] == ('quote',):
