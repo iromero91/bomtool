@@ -117,8 +117,8 @@ class ComponentCache:
                     voltage = parse_eng(f[:-1])
                 elif f in dielectrics:
                     dielectric = f
-            if dielectric == 'X7R':
-                res = pngen.CC_X7R(value, tolerance, voltage, package)
+            if dielectric in ['X7R', 'X5R']:
+                res = pngen.CC_XxR(value, tolerance, voltage, package, dielectric=dielectric)
         return res
 
 known_components = ComponentCache()

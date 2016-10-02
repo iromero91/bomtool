@@ -23,16 +23,18 @@ def RC(value, tolerance=5.0, power=None, package="0603",pkgcode="07"):
 _cc_voltages = {6300: '5', 10000: '6', 16000: '7', 25000: '8', 50000: '9'}
 
 
-def CC_X7R(value, tolerance=10, voltage=16, package='0603', pkgcode='R'):
+def CC_XxR(value, tolerance=10, voltage=16, package='0603', pkgcode='R', dielectric="X7R"):
     res = {"manufacturer": "Yageo"}
     c_pf = int(value * 1e12)
     exp = 0
     while c_pf >= 100:
         exp += 1
         c_pf /= 10
+    if package > '0603' and pkgcode == 'R':
+        pkgcode = 'K'
     c_str = str(int(c_pf))+str(exp)
     v_mv = round(voltage*1e3)
     v_str = _cc_voltages.get(v_mv, '9')
     t_str = 'K'
-    res["MPN"] = "CC{}{}{}X7R{}BB{}".format(package, t_str, pkgcode, v_str, c_str)
+    res["MPN"] = "CC{}{}{}{}{}BB{}".format(package, t_str, pkgcode, dielectric, v_str, c_str)
     return res
