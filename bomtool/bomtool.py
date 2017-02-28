@@ -184,9 +184,13 @@ def parse_bomline(line):
     if fields[0][0] + fields[0][-1] == "()":
         multiplier = fields.pop(0)[1:-1]
         try:
-            attrs['mult'] = int(multiplier, 10)
+            if multiplier == "DNP":
+                attrs['mult'] = 0
+            else:
+                attrs['mult'] = int(multiplier, 10)
         except:
-            pass
+            logging.error("Invalid multiplier ({})".format(multiplier))
+            
     known_component = known_components.get(tuple(fields))
     # Extract package if it exists (last field)
     if fields[-1][0] + fields[-1][-1] == "[]":
@@ -226,7 +230,15 @@ def bom_from_comps(comps):
     for l in sorted(grouped.keys()):
         bomlines = parse_bomline(l)
         for bomline in bomlines:
-            bomline['qty'] = len(grouped[l]) * bomline.get('mult', 1)
+            bomline['qty'] = len(grouped[l]) * bomline.get('mult', 1) or 'DO NOT POPULATE'
             bomline['refs'] = ", ".join([c['ref'] for c in grouped[l]])
+            for component in grouped[l]:
+                # Allow component attributes to override the bomline
+                if component.get('MPN'):
+                    bomline['MPN'] = component['MPN']
+                if component.get('manufacturer'):
+                    bomline['manufacturer'] = component['manufacturer']
+                elif component.get('Manuf'):
+                    bomline['manufacturer'] = component['Manuf']
             bom.append(bomline)
     return bom
