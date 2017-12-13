@@ -27,25 +27,37 @@ from __future__ import division
 from __future__ import absolute_import
 
 from .bomtool import comps_from_netlist, bom_from_comps
+from .xyrstool import do_xyrs
 
 from . import sexp
 from .sexp import car
 
 _bom_fields = ['qty','refs', 'description', 'package', 'manufacturer', 'MPN']
 
+_xyrs_fields = ['Designator', 'X-Loc', 'Y-Loc', 'Rotation', 'Side', 'Type', 'X-Size', 'Y-Size', 'Value', 'Footprint', 'Populate', 'MPN']
 
 def main():
     from sys import argv, stdout
-    from csv import DictWriter
-    data = car(sexp.load(open(argv[1])))
-    comps = comps_from_netlist(data)
+    from csv import DictWriter, excel_tab
+    net_data = car(sexp.load(open(argv[1])))
+    pcb_data = car(sexp.load(open(argv[2])))
+    
+    comps = comps_from_netlist(net_data)
     bom = bom_from_comps(comps)
-    of = open(argv[2], 'w')
-    bom_writer = DictWriter(of, fieldnames=_bom_fields,
+    bof = open(argv[3], 'w')
+    bom_writer = DictWriter(bof, fieldnames=_bom_fields,
                             extrasaction='ignore')
     bom_writer.writeheader()
     for b in bom:
         bom_writer.writerow(b)
+
+    xyrs = do_xyrs(pcb_data, comps)
+    xof = open(argv[4], 'w')
+    xyrs_writer = DictWriter(xof, fieldnames=_xyrs_fields, dialect=excel_tab,
+                             extrasaction='ignore')
+    xyrs_writer.writeheader()
+    for r in xyrs:
+        xyrs_writer.writerow(r)
 
 if __name__ == "__main__":
     main()
