@@ -31,12 +31,41 @@ from .xyrstool import generate_xyrs, write_xyrs_tsv
 
 
 def main():
-    from sys import argv, stdout
-    netlist = load_netlist(open(argv[1]))
+    import argparse
+    parser = argparse.ArgumentParser(description="Create Bills of Materials from KiCad netlist files")
+    parser.add_argument("netlist", help="Netlist to process")
+    parser.add_argument("pcb", help="PCB File (used for XYRS)", nargs='?')
+    parser.add_argument("--xyrs", help="Output XYRS format", type=str, metavar="FILE")
+    parser.add_argument("--bom", help="Output BOM in csv format", type=str, metavar="FILE")
+    args = parser.parse_args()
+
+    if not args.xyrs and not args.bom:
+        parser.error("No task specified")
+    elif args.xyrs and not args.pcb:
+        parser.error("A PCB file is needed when generating XYRS")
+
+    try:
+        netlist = load_netlist(open(args.netlist))
+    except Exception as e:
+        parser.error("Error loading netlist '{}': {}".format(args.netlist, str(e)))
+
     bom = generate_bom(netlist)
-    xyrs = generate_xyrs(open(argv[2]), bom)
-    write_bom_csv(bom, open(argv[3], 'w'))
-    write_xyrs_tsv(xyrs, open(argv[4], 'w'))
+    if args.bom:
+        try:
+            bom_file = open(args.bom, 'w')
+            write_bom_csv(bom, bom_file)
+        except Exception as e:
+            parser.error("Error writing BOM file '{}': {}".format(args.bom, str(e)))
+
+    if args.xyrs:
+        try:
+            xyrs = generate_xyrs(open(args.pcb), bom)
+        except Exception as e:
+            parser.error("Error parsing PCB '{}': {}".format(args.pcb, str(e))) 
+        try:
+            write_xyrs_tsv(xyrs, open(args.xyrs, 'w'))
+        except Exception as e:
+            parser.error("Error writing XYRS file '{}': {}".format(args.xyrs, str(e)))
 
 if __name__ == "__main__":
     main()
