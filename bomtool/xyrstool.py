@@ -88,7 +88,7 @@ def do_xyrs(data, comps):
                 break
         if not comp:
             logging.error("Component '{}' missing in netlist!".format(m['ref']))
-        if comp.get('BOM', '') == '':
+        elif comp.get('BOM', '') == '':
             logging.error("Component '{}' has no BOM line!".format(comp['ref']))
         elif comp['BOM'] == 'VIRTUAL':
             logging.warning(
