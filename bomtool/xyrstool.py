@@ -27,16 +27,13 @@ from __future__ import unicode_literals
 from __future__ import division
 from __future__ import absolute_import
 
+from . import sexp
 from .sexp import car, cdr, cadr, findall, assoc
-
-from . import pngen
-
-from .bomtool import parse_bomline
 
 import re
 import logging
-from collections import defaultdict
 
+from csv import DictWriter, excel_tab
 
 def parse_module(data):
     m = {}
@@ -75,28 +72,24 @@ def parse_module(data):
     return m
 
 
-def do_xyrs(data, comps):
-    raw_modules = list(findall(data, 'module'))
+def generate_xyrs(pcb_file, bom):
+    pcb_data = car(sexp.load(pcb_file))
+    raw_modules = list(findall(pcb_data, 'module'))
     modules = [parse_module(m) for m in raw_modules]
     xyrs = []
     for m in modules:
+        #XXX Discard virtual components earlier!
         xyrs_line = {}
-        comp = None
-        for c in comps:
-            if c.get('ref', 'SOFTDOG') == m.get('ref', 'NOSAME'):
-                comp = c
+        bomline = None
+        for line in bom:
+            if m.get('ref', '') in line['refs'].split(', '):
+                bomline = line
                 break
-        if not comp:
-            logging.error("Component '{}' missing in netlist!".format(m['ref']))
-        elif comp.get('BOM', '') == '':
-            logging.error("Component '{}' has no BOM line!".format(comp['ref']))
-        elif comp['BOM'] == 'VIRTUAL':
+        if not bomline:
             logging.warning(
-                "Component '{}' is VIRTUAL, will be excluded from the BOM."
-                .format(comp['ref']))
+                "Component '{}' not in the BOM."
+                .format(m['ref']))
         else:
-            bomline = parse_bomline(comp['BOM'])[0]
-            qty = bomline.get('mult', 1)
             xyrs_line['Designator'] = m.get('ref', '')
             xyrs_line['X-Loc'] = round(m.get('xpos', 0.0) / 0.0254, 2) #XXX the board lower X bound must be added
             xyrs_line['Y-Loc'] = -round(m.get('ypos', 0.0) / 0.0254, 2) # XXX the board upper Y bound must be added
@@ -105,10 +98,18 @@ def do_xyrs(data, comps):
             xyrs_line['Type'] = 1 # XXX implement properly (read attr smd?)
             xyrs_line['X-Size'] = round(m.get('size_x', 0.0) / 0.0254,2)
             xyrs_line['Y-Size'] = round(m.get('size_y', 0.0) / 0.0254,2)
-            xyrs_line['Value'] = bomline.get('description', '')
-            xyrs_line['Footprint'] = bomline.get('package','')
-            xyrs_line['Populate'] = 1 if qty else 0
-            xyrs_line['MPN'] = bomline.get('MPN', '')
+            xyrs_line['Value'] = bomline['description']
+            xyrs_line['Footprint'] = bomline.get('package', '')
+            xyrs_line['Populate'] = 1 if bomline['qty'] != "DO NOT POPULATE" else 0
+            xyrs_line['MPN'] = bomline['MPN']
             xyrs.append(xyrs_line)
     return xyrs
-            
+
+_xyrs_fields = ['Designator', 'X-Loc', 'Y-Loc', 'Rotation', 'Side', 'Type', 'X-Size', 'Y-Size', 'Value', 'Footprint', 'Populate', 'MPN']
+
+def write_xyrs_tsv(xyrs, xyrs_file):
+    xyrs_writer = DictWriter(xyrs_file, fieldnames=_xyrs_fields, dialect=excel_tab,
+                             extrasaction='ignore')
+    xyrs_writer.writeheader()
+    for r in xyrs:
+        xyrs_writer.writerow(r)

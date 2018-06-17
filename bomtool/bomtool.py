@@ -27,6 +27,7 @@ from __future__ import unicode_literals
 from __future__ import division
 from __future__ import absolute_import
 
+from . import sexp
 from .sexp import car, cdr, cadr, findall, assoc
 
 from . import pngen
@@ -34,6 +35,8 @@ from . import pngen
 import re
 import logging
 from collections import defaultdict
+
+from csv import DictWriter
 
 _manuf_abbr = {
     'TI': "Texas Instruments",
@@ -134,8 +137,9 @@ def parse_comp(comp_data):
     return res
 
 
-def comps_from_netlist(data):
-    comps_data = findall(cdr(assoc(data, 'components')), 'comp')
+def load_netlist(net_file):
+    net_data = car(sexp.load(net_file))
+    comps_data = findall(cdr(assoc(net_data, 'components')), 'comp')
     return [parse_comp(c) for c in comps_data]
 
 _re_eng = re.compile(
@@ -214,7 +218,7 @@ def parse_bomline(line):
     return [attrs]
 
 
-def bom_from_comps(comps):
+def generate_bom(comps):
     grouped = defaultdict(list)
     for c in comps:
         if c.get('BOM', '') == '':
@@ -242,3 +246,12 @@ def bom_from_comps(comps):
                     bomline['manufacturer'] = component['Manuf']
             bom.append(bomline)
     return bom
+
+_bom_fields = ['qty','refs', 'description', 'package', 'manufacturer', 'MPN']
+
+def write_bom_csv(bom, bom_file):
+    bom_writer = DictWriter(bom_file, fieldnames=_bom_fields,
+                            extrasaction='ignore')
+    bom_writer.writeheader()
+    for b in bom:
+        bom_writer.writerow(b)
