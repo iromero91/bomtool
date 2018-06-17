@@ -3,6 +3,14 @@
 This is a work in progress script to create beautiful Bills of
 Materials from KiCad netlist files.
 
+# Installation
+
+You can install this module with pip
+
+    $ pip3 install -e . --user
+    
+That installs the `bomtool` command.
+
 # How to use
 
 To make use of this tool, every component in the schematic must have a
@@ -13,23 +21,21 @@ jumpers, net ties, mounting holes) should have their `BOM` field to
 "!!MISSING!!" tag in the description and the script will show a
 warning.
 
-Right now the script just outputs a fixed format CSV file, after
-grouping, counting and filling every BOM line the best it can from the
-available data. To call it you first need to export a netlist from
-eeschema and then call the script like this:
+Right now the script can output either a fixed format CSV file or a
+Macrofab XYRS file.
 
-    $ python3 -m bomtool myproject.net myproject-bom.csv
+To call it you first need to export a netlist from eeschema and then:
 
-# Installation
-
-To install bomtool you can do it in a virtualenv
-
-    $ mkvirtualenv bomtool
-    $ workon bomtool
-    (bomtool)$ pip install --editable .
+    $ bomtool myproject.net --bom fabrication/bom.csv
     
-After that you can run the code from anywhere with the "bomtool"
-command.
+To generate a macrofab XYRS file, you also need to specify the PCB
+file (to extract the XY data):
+
+    $ bomtool myproject.net myproject.kicad_pcb --xyrs fabrication/mf-bom.xyrs
+    
+Both files can be generated at the same time:
+
+    $ bomtool myproject.net myproject.kicad_pcb --bom fabrication/bom.csv --xyrs fabrication/mf-bom.xyrs
 
 # BOM format
 
@@ -103,7 +109,7 @@ Fields: TODO
 
 # License
 
-Copyright (c) 2016 Jose I Romero
+Copyright (c) 2016-2018 Jose I Romero
 
 All this code is licensed under the MIT license, see the LICENSE file
 for more details.

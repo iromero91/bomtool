@@ -1,6 +1,6 @@
 # Bom tool
 #
-# Copyright (c) 2016 Jose I Romero
+# Copyright (c) 2016-2018 Jose I Romero
 
 # Permission is hereby granted, free of charge, to any person obtaining
 # a copy of this software and associated documentation files (the
