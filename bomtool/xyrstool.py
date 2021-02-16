@@ -90,7 +90,7 @@ def generate_xyrs(pcb_file, bom):
                 "Component '{}' not in the BOM."
                 .format(m['ref']))
         else:
-            xyrs_line['Designator'] = m.get('ref', '')
+            xyrs_line['#Designator'] = m.get('ref', '')
             xyrs_line['X-Loc'] = round(m.get('xpos', 0.0) / 0.0254, 2) #XXX the board lower X bound must be added
             xyrs_line['Y-Loc'] = -round(m.get('ypos', 0.0) / 0.0254, 2) # XXX the board upper Y bound must be added
             xyrs_line['Rotation'] = m.get('rot', 0)
@@ -101,11 +101,11 @@ def generate_xyrs(pcb_file, bom):
             xyrs_line['Value'] = bomline['description']
             xyrs_line['Footprint'] = bomline.get('package', '')
             xyrs_line['Populate'] = 1 if bomline['qty'] != "DO NOT POPULATE" else 0
-            xyrs_line['MPN'] = bomline['MPN']
+            xyrs_line['MPN'] = bomline.get('MPN', '')
             xyrs.append(xyrs_line)
     return xyrs
 
-_xyrs_fields = ['Designator', 'X-Loc', 'Y-Loc', 'Rotation', 'Side', 'Type', 'X-Size', 'Y-Size', 'Value', 'Footprint', 'Populate', 'MPN']
+_xyrs_fields = ['#Designator', 'X-Loc', 'Y-Loc', 'Rotation', 'Side', 'Type', 'X-Size', 'Y-Size', 'Value', 'Footprint', 'Populate', 'MPN']
 
 def write_xyrs_tsv(xyrs, xyrs_file):
     xyrs_writer = DictWriter(xyrs_file, fieldnames=_xyrs_fields, dialect=excel_tab,
